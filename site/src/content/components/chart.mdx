@@ -1,0 +1,83 @@
+---
+title: Chart
+description: The frame, the tooltip and the legends of a recharts chart, with the ferry-ui tokens.
+group: Charts
+source: src/components/charts/chart.tsx
+---
+
+<Demo name="chart/hero" align="stretch" title="A bar chart of orders per month" />
+
+## Usage guidelines
+
+- **Any recharts chart.** Use it for bars, a pie or a custom chart.
+- **Values over time.** For lines over time, use [Time Series Chart](/docs/components/time-series-chart).
+- **Colors come from tokens.** Use `var(--chart-1)` to `var(--chart-5)` in `config`.
+
+## Installation
+
+The charts use recharts. Install it in your app. Import the parts from `ferry-ui/charts`.
+
+```sh
+npm install recharts
+```
+
+## Anatomy
+
+```tsx title="Anatomy"
+import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent } from 'ferry-ui/charts'
+
+<ChartContainer config={config}>
+  <BarChart data={rows}>
+    <ChartTooltip content={<ChartTooltipContent />} />
+    <ChartLegend content={<ChartLegendContent />} />
+  </BarChart>
+</ChartContainer>
+```
+
+| Part | Role |
+| --- | --- |
+| `ChartContainer` | The frame. It sizes the chart and gives each color of `config` as `--color-<key>`. |
+| `ChartTooltip` | The `Tooltip` of recharts. Give it a `ChartTooltipContent`. |
+| `ChartLegend` | The `Legend` of recharts. Give it a `ChartLegendContent`. |
+| `ChartLegendList` | A legend outside the chart. |
+
+## Examples
+
+### Config
+
+`config` gives the label and the color of each series key. Draw a series with `fill="var(--color-<key>)"`. For one color in each theme, use `theme` with a `light` and a `dark` color instead of `color`.
+
+### Size
+
+The frame has a 16:9 ratio. For a fixed height, set `className="aspect-auto h-60 w-full"`.
+
+### Legend outside the chart
+
+`ChartLegendList` shows a list of series names with their colors. Put it in a card header, or above charts that share their series. `chartColor(index)` gives the color of each series.
+
+<Demo name="chart/legend-list" title="A legend of five projects" />
+
+## Accessibility
+
+- Give each chart an `aria-label`, such as "Orders per month".
+- `ChartLegendList` has the name "Legend". Change it with `aria-label`.
+
+## API reference
+
+`ChartContainer` and `ChartLegendList` also accept each attribute of their root element.
+
+### ChartContainer
+
+<PropsTable of="ChartContainer" />
+
+### ChartTooltipContent
+
+<PropsTable of="ChartTooltipContent" />
+
+### ChartLegendContent
+
+<PropsTable of="ChartLegendContent" />
+
+### ChartLegendList
+
+<PropsTable of="ChartLegendList" />

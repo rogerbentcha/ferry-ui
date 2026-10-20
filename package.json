@@ -30,6 +30,10 @@
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
     },
+    "./charts": {
+      "types": "./dist/charts.d.ts",
+      "default": "./dist/charts.js"
+    },
     "./tokens.css": "./dist/styles/tokens.css",
     "./theme.css": "./dist/styles/theme.css",
     "./fonts.css": "./dist/styles/fonts.css",
@@ -62,10 +66,14 @@
   "peerDependencies": {
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "tailwindcss": "^4.1.0"
+    "tailwindcss": "^4.1.0",
+    "recharts": "^3.10.1"
   },
   "peerDependenciesMeta": {
     "tailwindcss": {
+      "optional": true
+    },
+    "recharts": {
       "optional": true
     }
   },
@@ -110,6 +118,7 @@
     "react-docgen-typescript": "^2.4.0",
     "react-dom": "^19.3.0",
     "react-router": "^7.18.4",
+    "recharts": "^3.10.1",
     "rehype-slug": "^6.0.0",
     "remark-frontmatter": "^5.0.0",
     "remark-gfm": "^4.0.1",

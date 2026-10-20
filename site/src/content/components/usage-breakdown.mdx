@@ -1,0 +1,56 @@
+---
+title: Usage Breakdown
+description: A bar and a list that show how the parts of a quota use it.
+group: Patterns
+source: src/components/patterns/usage-breakdown.tsx
+---
+
+<Demo name="usage-breakdown/hero" align="stretch" title="Storage used by five types of files" />
+
+## Usage guidelines
+
+- **A quota with parts.** Use it for storage by file type, seats by team or a budget by project.
+- **The largest part first.** Give the small parts the `neutral` tone, so the large parts stand out.
+- **One percentage is not a breakdown.** For one value, use the `UsageBar` of [Metric Card](/docs/components/metric-card).
+- **Parts that change over time.** Use a stacked [Time Series Chart](/docs/components/time-series-chart).
+
+## Anatomy
+
+```tsx title="Anatomy"
+import { UsageBreakdown } from 'ferry-ui'
+
+<UsageBreakdown label="" total={0} items={[{ key: '', label: '', value: 0 }]} />
+```
+
+The header shows the share used and the total. The bar shows one segment for each part. Each row shows a part, its amount and its share of `total`.
+
+## Examples
+
+### Info on a part
+
+`info` puts a dotted line under the label. The [Tooltip](/docs/components/tooltip) shows the text on hover and on keyboard focus.
+
+<Demo name="usage-breakdown/info" title="Two parts with an info tooltip" />
+
+### Format and header
+
+`formatValue` sets the format of each amount. The default is a short number, such as `8.3k` or `1M`. `title` and `summary` replace the two sides of the header. If `summary` is `null`, the right side is empty.
+
+<Demo name="usage-breakdown/format" title="Seats by team" />
+
+### Bar only
+
+`hideList` removes the rows. The header and the bar stay.
+
+<Demo name="usage-breakdown/bar-only" title="A breakdown with no list" />
+
+## Accessibility
+
+- The bar has the `meter` role. Give it a `label`, such as "Storage used".
+- The rows show each number as text, so the colors are not the only cue.
+
+## API reference
+
+`UsageBreakdown` also accepts each attribute of the `<div>` element.
+
+<PropsTable of="UsageBreakdown" />

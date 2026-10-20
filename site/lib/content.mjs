@@ -16,7 +16,7 @@ export const DEMOS_DIR = path.join(SITE_ROOT, 'src', 'demos')
 export const API_DIR = path.join(SITE_ROOT, 'src', 'generated', 'api')
 
 /** Sidebar groups, in display order. A page of `content/components/` names its group in `group`. */
-export const GROUPS = ['Overview', 'Handbook', 'Examples', 'Primitives', 'Patterns', 'Layout', 'Utilities']
+export const GROUPS = ['Overview', 'Handbook', 'Examples', 'Primitives', 'Patterns', 'Layout', 'Charts', 'Utilities']
 
 /** Group of a page when its front matter has no `group`: the folder decides. */
 const FOLDER_GROUP = {

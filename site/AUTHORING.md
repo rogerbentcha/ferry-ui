@@ -32,7 +32,7 @@ site/src/demos/<slug>/<demo>.tsx        → <Demo name="<slug>/<demo>" />
 | `overview/` | Overview | What ferry-ui is, how to start. |
 | `handbook/` | Handbook | One subject that goes across components: styling, theming, forms. |
 | `examples/` | Examples | A full screen built with ferry-ui. |
-| `components/` | Primitives, Patterns or Layout (`group:` in the front matter) | One page per component file of `src/components/`. |
+| `components/` | Primitives, Patterns, Layout or Charts (`group:` in the front matter) | One page per component file of `src/components/`. |
 | `utilities/` | Utilities | Providers, hooks and helper functions. |
 
 A new page needs no registration: the sidebar, the search, the "on this page" list and the Markdown
@@ -54,7 +54,7 @@ order: 3
 | --- | --- |
 | `title` | The name a reader looks for. Words with spaces for a component: "Alert Dialog", not "AlertDialog". |
 | `description` | One full sentence, 20 words at most, that says what the thing is. It ends with a period. Plain text, no Markdown. |
-| `group` | Component pages only: `Primitives`, `Patterns` or `Layout` (the folder of the source file). |
+| `group` | Component pages only: `Primitives`, `Patterns`, `Layout` or `Charts` (the folder of the source file). |
 | `source` | Component and utility pages: the path of the module in the repository. It gives the "View source" link. |
 | `order` | Overview, Handbook and Examples only: the position in the group. Other groups sort by title. |
 

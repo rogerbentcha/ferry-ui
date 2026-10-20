@@ -21,7 +21,7 @@ import ts from 'typescript'
 
 import { API_DIR, REPO_ROOT } from '../lib/content.mjs'
 
-const SOURCE_FOLDERS = ['components/primitives', 'components/patterns', 'components/layout', 'theme', 'lib']
+const SOURCE_FOLDERS = ['components/primitives', 'components/patterns', 'components/layout', 'components/charts', 'theme', 'lib']
 const SRC = path.join(REPO_ROOT, 'src')
 
 /** Declarations of React and of the DOM: their props are not listed. */
@@ -30,8 +30,9 @@ const isLibraryFile = (fileName) => fileName.startsWith(SRC + path.sep)
 
 const configFile = path.join(REPO_ROOT, 'tsconfig.json')
 const config = ts.parseJsonConfigFileContent(ts.readConfigFile(configFile, ts.sys.readFile).config, ts.sys, REPO_ROOT)
-const entry = path.join(SRC, 'index.ts')
-const program = ts.createProgram([entry], { ...config.options, noEmit: true })
+// The entry points of the package: `ferry-ui` and `ferry-ui/charts`.
+const entries = ['index.ts', 'charts.ts'].map((file) => path.join(SRC, file))
+const program = ts.createProgram(entries, { ...config.options, noEmit: true })
 const checker = program.getTypeChecker()
 
 /** JSDoc as plain Markdown: `{@link Name}` becomes `Name` in code style, wrapped lines are joined. */
@@ -137,14 +138,17 @@ function componentDeclaration(symbol) {
   return null
 }
 
-const moduleSymbol = checker.getSymbolAtLocation(program.getSourceFile(entry))
-if (!moduleSymbol) throw new Error('src/index.ts is not a module')
+const exports = entries.flatMap((entry) => {
+  const moduleSymbol = checker.getSymbolAtLocation(program.getSourceFile(entry))
+  if (!moduleSymbol) throw new Error(`${path.relative(REPO_ROOT, entry)} is not a module`)
+  return checker.getExportsOfModule(moduleSymbol)
+})
 
 fs.rmSync(API_DIR, { recursive: true, force: true })
 fs.mkdirSync(API_DIR, { recursive: true })
 
 let count = 0
-for (const exported of checker.getExportsOfModule(moduleSymbol)) {
+for (const exported of exports) {
   const name = exported.getName()
   // Components only: hooks, helpers and constants (`useTheme`, `toast`, `STATUS_TONES`) have no props.
   if (!/^[A-Z][a-z]/.test(name)) continue

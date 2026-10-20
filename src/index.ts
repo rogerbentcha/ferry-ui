@@ -99,6 +99,7 @@ export * from './components/patterns/split-button'
 export * from './components/patterns/status'
 export * from './components/patterns/table-states'
 export * from './components/patterns/table-utils'
+export * from './components/patterns/usage-breakdown'
 
 /* -------------------------------------------------------------------------------------------------
  * Layout

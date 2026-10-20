@@ -199,7 +199,7 @@ function structure(file, data, body) {
   }
   if (data.group && !GROUPS.includes(data.group)) problems.push(`front matter: group "${data.group}" is not one of ${GROUPS.join(', ')}`)
   if (relative.startsWith('components/')) {
-    if (!['Primitives', 'Patterns', 'Layout'].includes(data.group)) problems.push('front matter: a component page needs group: Primitives, Patterns or Layout')
+    if (!['Primitives', 'Patterns', 'Layout', 'Charts'].includes(data.group)) problems.push('front matter: a component page needs group: Primitives, Patterns, Layout or Charts')
     if (!data.source) problems.push('front matter: a component page needs source: (path of the module in the repository)')
   }
   if (data.source && !fs.existsSync(path.join(REPO_ROOT, data.source))) problems.push(`front matter: source ${data.source} does not exist`)

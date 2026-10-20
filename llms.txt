@@ -2,7 +2,7 @@
 
 > ferry-ui is a React 19 design system for dense product interfaces (dashboards, admin consoles, settings pages, data tables, developer tools): design tokens, accessible primitives on Radix UI, higher-level patterns and application-shell layout pieces, styled with Tailwind CSS v4 in the shadcn/ui conventions.
 
-Install the package with `npm install ferry-ui`. Import everything from the package root (`import { Button } from 'ferry-ui'`). Stylesheets are separate entry points: `ferry-ui/theme.css` (Tailwind v4 apps), `ferry-ui/styles.css` (precompiled, no Tailwind needed), `ferry-ui/fonts.css`, `ferry-ui/tokens.css`. Colors, radii, shadows and fonts come from tokens only, never from raw values. Components are router agnostic (links are `href` strings rendered through `LinkProvider`) and hold no global state (`value` / `onValueChange`, `open` / `onOpenChange`).
+Install the package with `npm install ferry-ui`. Import everything from the package root (`import { Button } from 'ferry-ui'`). Charts come from `ferry-ui/charts` and need the optional peer dependency `recharts`. Stylesheets are separate entry points: `ferry-ui/theme.css` (Tailwind v4 apps), `ferry-ui/styles.css` (precompiled, no Tailwind needed), `ferry-ui/fonts.css`, `ferry-ui/tokens.css`. Colors, radii, shadows and fonts come from tokens only, never from raw values. Components are router agnostic (links are `href` strings rendered through `LinkProvider`) and hold no global state (`value` / `onValueChange`, `open` / `onOpenChange`).
 
 The Storybook links below need the local server: run `npm run storybook`, which serves http://localhost:6006.
 
@@ -22,6 +22,7 @@ The Storybook links below need the local server: run `npm run storybook`, which 
 - [Primitives](http://localhost:6006/?path=/docs/primitives-button--docs): 28 building blocks on Radix UI (Button, Input, Select, Dialog, Dropdown Menu, Tabs, Table, Tooltip, Toaster…); sources in `src/components/primitives`
 - [Patterns](http://localhost:6006/?path=/docs/patterns-page--docs): Compositions for recurring product needs (page headers, form cards, table states, empty and error states, callouts, confirm dialogs, copy fields, metric cards…); sources in `src/components/patterns`
 - [Layout](http://localhost:6006/?path=/docs/layout-app-shell--docs): Application-shell pieces (app shell, top bar, icon rail, mobile navigation, inner menu, command menu, resource switcher, theme menu); sources in `src/components/layout`
+- [Charts](http://localhost:6006/?path=/docs/charts-time-series-chart--docs): Charts on recharts, imported from `ferry-ui/charts` (time-series chart, themed chart container, tooltip and legends); sources in `src/components/charts`
 
 ## Examples
 
@@ -33,5 +34,6 @@ The Storybook links below need the local server: run `npm run storybook`, which 
 ## Optional
 
 - [Public API](src/index.ts): The barrel that lists every public module
+- [Charts API](src/charts.ts): The `ferry-ui/charts` barrel
 - [Design tokens](src/styles/tokens.css): CSS custom properties, light and dark values
 - [Tailwind theme](src/styles/theme.css): Mapping of the tokens onto Tailwind theme names and the custom utilities
