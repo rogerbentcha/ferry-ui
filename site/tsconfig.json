@@ -7,6 +7,7 @@
     "checkJs": false,
     "paths": {
       "ferry-ui": ["../src/index.ts"],
+      "ferry-ui/charts": ["../src/charts.ts"],
       "@/*": ["./src/*"]
     }
   },

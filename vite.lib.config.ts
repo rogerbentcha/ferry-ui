@@ -20,7 +20,7 @@ const importsReact = (imports: readonly string[]) =>
 export default defineConfig({
   plugins: [react()],
   build: {
-    lib: { entry: 'src/index.ts', formats: ['es'] },
+    lib: { entry: { index: 'src/index.ts', charts: 'src/charts.ts' }, formats: ['es'] },
     sourcemap: true,
     // Readable output: consumers minify their own bundles.
     minify: false,

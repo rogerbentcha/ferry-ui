@@ -56,6 +56,7 @@ export function NoProjects({ onCreate }: { onCreate: () => void }) {
 | Primitives | 28 shadcn-style building blocks on Radix UI: Button, Input, Select, Dialog, Dropdown Menu, Tabs, Table, Tooltip, Toaster… |
 | Patterns | Compositions for recurring product needs: page headers, form cards, data-table states, empty and error states, callouts, confirm dialogs, copy fields, metric cards, key/value editor… |
 | Layout | The application shell: app shell, top bar, icon rail, mobile navigation, inner menu, command menu, resource switcher, theme menu |
+| Charts | Charts on recharts, from `ferry-ui/charts`: a time-series chart (lines or stacked areas, round axes, breaks, units) and the themed chart container, tooltip and legends |
 | Hooks and helpers | `cn`, `getErrorMessage`, `useCopy`, `useCommandShortcut`, `useTheme`, `useModKey`, the link contract |
 | Documentation | A Storybook with every variant and state, full-screen example pages, and an agent guide |
 
@@ -89,6 +90,7 @@ Requirements:
   component, so unused components are tree-shaken.
 - `tailwindcss` 4.1 or later, only if your app compiles `ferry-ui/theme.css` itself
   (see [CSS setup](#css-setup)).
+- `recharts` 3.10 or later, only if your app draws charts (see [Charts](#charts)).
 
 Radix UI, lucide-react, cmdk, sonner and the class helpers are regular dependencies and are installed
 with the package. Everything is imported from the package root (`import { Button } from 'ferry-ui'`); deep
@@ -506,6 +508,7 @@ and states. Start it with `npm run storybook`; the links below then open the mat
 | [Description List](http://localhost:6006/?path=/docs/patterns-description-list--docs) | Read-only facts about one record |
 | [Info Tile](http://localhost:6006/?path=/docs/patterns-info-tile--docs) | Overview tiles: icon, label, value |
 | [Metric Card](http://localhost:6006/?path=/docs/patterns-metric-card--docs) | `MetricCard`, `MetricTrend`, `UsageBar`, `LegendDot`: KPI numbers |
+| [Usage Breakdown](http://localhost:6006/?path=/docs/patterns-usage-breakdown--docs) | A capacity split between its parts: segmented bar and rows with amounts and shares |
 | [Resource Card](http://localhost:6006/?path=/docs/patterns-resource-card--docs) | `ResourceGrid`, `ResourceCard`: browsable collections |
 | [Status](http://localhost:6006/?path=/docs/patterns-status--docs) | `StatusBadge`, `StatusDot`, `StatusLine`: the state of a record |
 | [Icon Box](http://localhost:6006/?path=/docs/patterns-icon-box--docs) | The outlined icon square in front of a name |
@@ -525,6 +528,25 @@ and states. Start it with `npm run storybook`; the links below then open the mat
 | [Command Menu](http://localhost:6006/?path=/docs/layout-command-menu--docs) | The app-wide command palette |
 | [Resource Switcher](http://localhost:6006/?path=/docs/layout-resource-switcher--docs) | Searchable switcher between projects, workspaces, teams |
 | [Theme Menu](http://localhost:6006/?path=/docs/layout-theme-menu--docs) | Light / dark / system picker |
+
+### Charts
+
+Charts draw with [recharts](https://recharts.org), an optional peer dependency: install it only if your
+app draws charts, and import the charts from their own entry point. `ferry-ui` itself never imports
+recharts.
+
+```sh
+npm install recharts
+```
+
+```ts
+import { TimeSeriesChart } from 'ferry-ui/charts'
+```
+
+| Component | Use it for |
+| --- | --- |
+| [Time Series Chart](http://localhost:6006/?path=/docs/charts-time-series-chart--docs) | `TimeSeriesChart`: values over time (CPU, memory, requests, latency) in a `MetricCard` |
+| [Chart](http://localhost:6006/?path=/docs/charts-chart--docs) | `ChartContainer`, `ChartTooltipContent`, `ChartLegendContent`, `ChartLegendList`: any other recharts chart, on the tokens |
 
 ### Examples
 
@@ -567,6 +589,7 @@ STORIES=primitives/button,patterns/empty-state npx vitest run src/stories.test.t
 ferry-ui/
 ├─ src/
 │  ├─ index.ts                  public barrel: everything an app may import
+│  ├─ charts.ts                 `ferry-ui/charts` barrel: the charts (they need recharts)
 │  ├─ styles/                   tokens.css, theme.css, fonts.css, standalone.css
 │  ├─ theme/                    ThemeProvider, useTheme, themeInitScript
 │  ├─ lib/                      cn, getErrorMessage, link contract, platform constants
@@ -574,7 +597,8 @@ ferry-ui/
 │  ├─ components/
 │  │  ├─ primitives/            building blocks on Radix UI, one file per component
 │  │  ├─ patterns/              compositions of primitives
-│  │  └─ layout/                application-shell pieces
+│  │  ├─ layout/                application-shell pieces
+│  │  └─ charts/                charts on recharts, exported by charts.ts only
 │  ├─ foundations/              Storybook pages: introduction, colors, typography, theming…
 │  ├─ examples/                 full-screen example pages (`*-example.tsx`) and their stories
 │  ├─ stories.test.tsx          smoke test: renders every story and runs its play function
@@ -603,13 +627,14 @@ agents alike. In short, to add a component:
 4. **Document it in JSDoc**, on the component and on every prop: what it is, when to use it, when not
    to (and what to use instead), the defaults. Storybook renders this text.
 5. **Write the stories** (CSF3, `satisfies Meta<typeof Component>`):
-   - a title in the right section (`Primitives/…`, `Patterns/…`, `Layout/…`);
+   - a title in the right section (`Primitives/…`, `Patterns/…`, `Layout/…`, `Charts/…`);
    - `parameters.docs.description.component` with usage guidance;
    - a `Default` story driven by `args`;
    - one story per variant, size and state, then compositions;
    - `fn()` for callbacks and a `play` test for interactive behavior;
    - generic example data (projects, members, invoices, API keys, orders).
-6. **Export it** from `src/index.ts` with `export * from './components/<layer>/<file>'`.
+6. **Export it** from `src/index.ts` with `export * from './components/<layer>/<file>'` (a chart: from
+   `src/charts.ts`).
 7. **Add it to AGENTS.md** (catalog entry and snippet) and to the table above.
 8. **Run the checks**:
 

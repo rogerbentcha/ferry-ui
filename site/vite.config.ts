@@ -47,6 +47,8 @@ export default defineConfig({
   ],
   resolve: {
     alias: {
+      // Before `ferry-ui`: an alias also matches the paths under its name.
+      'ferry-ui/charts': fileURLToPath(new URL('../src/charts.ts', import.meta.url)),
       'ferry-ui': fileURLToPath(new URL('../src/index.ts', import.meta.url)),
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },

@@ -11,8 +11,9 @@ import { Heading, Section } from './ui'
 const LAYERS = [
   { name: 'Tokens', text: 'Colors, radii, shadows and fonts, light and dark' },
   { name: 'Primitives', text: '28 building blocks on Radix UI' },
-  { name: 'Patterns', text: '22 compositions for recurring product needs' },
+  { name: 'Patterns', text: '23 compositions for recurring product needs' },
   { name: 'Layout', text: '8 pieces of the application shell' },
+  { name: 'Charts', text: 'Time series and themed recharts parts' },
   { name: 'Hooks and helpers', text: 'cn, useCopy, useTheme, the link contract' },
   { name: 'Documentation', text: 'These docs, a Storybook and a guide for agents' },
 ]

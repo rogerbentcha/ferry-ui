@@ -2,7 +2,7 @@
 //
 // 1. Snippets. Every ```tsx code block of AGENTS.md, README.md and the Storybook introduction is
 //    extracted into a temporary folder and type-checked with the project's own tsconfig, with
-//    `ferry-ui` mapped onto ./src/index.ts. A snippet is checked as ONE standalone module: it must
+//    `ferry-ui` mapped onto ./src/index.ts and `ferry-ui/charts` onto ./src/charts.ts. A snippet is checked as ONE standalone module: it must
 //    import what it uses (from 'ferry-ui', 'react', 'lucide-react'…) and declare its own data.
 //      - ```tsx file=app/providers.tsx   writes the snippet at that path (inside a folder of its
 //        own per document), so a later snippet of the same document can import it ('./providers').
@@ -13,8 +13,8 @@
 //        (```ts, ```jsx, ```css, ```sh…) are never checked.
 //    Errors are reported with the line of the Markdown file, not of the temporary file.
 //
-// 2. Catalog coverage. Every name exported by src/index.ts (components, hooks, helpers, types)
-//    must be mentioned in AGENTS.md, so a new export cannot ship undocumented.
+// 2. Catalog coverage. Every name exported by src/index.ts and src/charts.ts (components, hooks,
+//    helpers, types) must be mentioned in AGENTS.md, so a new export cannot ship undocumented.
 //
 // Usage: node scripts/check-docs-snippets.mjs [--keep] [--no-coverage] [files…]
 //   --keep         keep the temporary folder (node_modules/.cache/ferry-ui-docs-check) for debugging
@@ -210,7 +210,10 @@ function typeCheck() {
       noUnusedLocals: false,
       noUnusedParameters: false,
       // The package name resolves to the sources, so the docs are checked against the current API.
-      paths: { 'ferry-ui': [fromTemp(join(root, 'src', 'index.ts'))] },
+      paths: {
+        'ferry-ui': [fromTemp(join(root, 'src', 'index.ts'))],
+        'ferry-ui/charts': [fromTemp(join(root, 'src', 'charts.ts'))],
+      },
       // Relative imports of `file=src/...` snippets resolve as if they were written in ./src.
       ...(overlays.size > 0 && { rootDirs: [join(root, 'src'), ...overlays].map(fromTemp) }),
     },
@@ -242,20 +245,24 @@ function typeCheck() {
  * Catalog coverage
  * -----------------------------------------------------------------------------------------------*/
 
-/** Names exported by src/index.ts (values and types), read with the TypeScript compiler API. */
+/** The entry points of the package: their exports are the public API. */
+const ENTRIES = ['index.ts', 'charts.ts']
+
+/** Names exported by the entry points (values and types), read with the TypeScript compiler API. */
 function publicExports() {
   const ts = require('typescript')
   const configFile = join(root, 'tsconfig.json')
   const config = ts.parseJsonConfigFileContent(ts.readConfigFile(configFile, ts.sys.readFile).config, ts.sys, root)
-  const entry = join(root, 'src', 'index.ts')
-  const program = ts.createProgram([entry], { ...config.options, noEmit: true })
+  const entries = ENTRIES.map((entry) => join(root, 'src', entry))
+  const program = ts.createProgram(entries, { ...config.options, noEmit: true })
   const checker = program.getTypeChecker()
-  const moduleSymbol = checker.getSymbolAtLocation(program.getSourceFile(entry))
-  if (!moduleSymbol) throw new Error('src/index.ts is not a module')
-  return checker
-    .getExportsOfModule(moduleSymbol)
-    .map((symbol) => symbol.getName())
-    .sort((a, b) => a.localeCompare(b))
+  const names = new Set()
+  for (const entry of entries) {
+    const moduleSymbol = checker.getSymbolAtLocation(program.getSourceFile(entry))
+    if (!moduleSymbol) throw new Error(`${toPosix(relative(root, entry))} is not a module`)
+    for (const symbol of checker.getExportsOfModule(moduleSymbol)) names.add(symbol.getName())
+  }
+  return [...names].sort((a, b) => a.localeCompare(b))
 }
 
 function missingFromCatalog() {
@@ -288,7 +295,7 @@ if (coverage && requested.length === 0) {
   const missing = missingFromCatalog()
   if (missing.length > 0) {
     failed = true
-    console.error(`${CATALOG_DOC}: ${missing.length} public export(s) of src/index.ts are not documented:`)
+    console.error(`${CATALOG_DOC}: ${missing.length} public export(s) of src/index.ts and src/charts.ts are not documented:`)
     console.error(`  ${missing.join(', ')}`)
   }
 }
@@ -298,4 +305,4 @@ if (failed) {
   console.error(`check:docs failed (${summary}).`)
   process.exit(1)
 }
-console.log(`check:docs: ${summary} type-check against src/index.ts${coverage && requested.length === 0 ? `; every public export is in ${CATALOG_DOC}` : ''}.`)
+console.log(`check:docs: ${summary} type-check against src/index.ts and src/charts.ts${coverage && requested.length === 0 ? `; every public export is in ${CATALOG_DOC}` : ''}.`)

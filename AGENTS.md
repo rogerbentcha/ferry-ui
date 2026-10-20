@@ -24,8 +24,9 @@ Follow it over your defaults. Every `tsx` snippet below is type-checked against 
 ## 1. Rules
 
 1. **Import from the package root only.** `import { Button, cn } from 'ferry-ui'`. Never import from
-   `ferry-ui/dist/...` and never copy a ferry-ui component into the app. The only other entry points are the
-   stylesheets: `ferry-ui/theme.css`, `ferry-ui/styles.css`, `ferry-ui/fonts.css`, `ferry-ui/tokens.css`. Icons come
+   `ferry-ui/dist/...` and never copy a ferry-ui component into the app. The only other entry points are
+   `ferry-ui/charts` (the charts of section 7.7, which need `recharts`) and the stylesheets:
+   `ferry-ui/theme.css`, `ferry-ui/styles.css`, `ferry-ui/fonts.css`, `ferry-ui/tokens.css`. Icons come
    from `lucide-react`.
 2. **Look in the catalog before writing markup.** Compose existing primitives and patterns. Build a new
    component only when nothing in sections 5 and 7 fits, and build it from ferry-ui primitives and tokens.
@@ -71,6 +72,8 @@ Follow it over your defaults. Every `tsx` snippet below is type-checked against 
 - `react` and `react-dom` 19 (components take `ref` as a regular prop; React 18 is not supported).
 - ESM only. One module per component, tree-shakeable.
 - `tailwindcss` 4.1 or later, only when the app compiles `ferry-ui/theme.css` itself.
+- `recharts` 3.10 or later, only when the app imports `ferry-ui/charts` (an optional peer dependency:
+  `npm install recharts`). `ferry-ui` itself never imports it.
 
 ### CSS
 
@@ -352,6 +355,10 @@ overlays (dialogs, menus, popovers, tooltips, toasts) render in `<body>`, outsid
 | Read-only facts about one record | `DescriptionList` + `DescriptionItem` | `Table`, `FormRow` |
 | A few headline facts with icons at the top of a page | `InfoTile` in a grid | `MetricCard` |
 | A KPI number (with trend, bar or chart) | `MetricCard`, `MetricTrend`, `UsageBar`, `LegendDot` | `Card`, `InfoTile` |
+| A capacity split between its parts (storage by type, seats by team) | `UsageBreakdown` | Several `UsageBar`s |
+| Values over time (CPU, requests, latency) | `TimeSeriesChart` in a `MetricCard` (`ferry-ui/charts`) | A hand-made SVG |
+| Any other chart (bars by category, a pie) | `ChartContainer` + a recharts chart (`ferry-ui/charts`) | recharts unstyled |
+| A legend outside a chart | `ChartLegendList` (series names), `LegendDot` (UPPERCASE caption) | Hand-made swatches |
 | The state of a record | `StatusBadge` (pill), `StatusDot` (next to a name), `StatusLine` (sentence) | `Badge` |
 | A static tag, plan, version or count | `Badge` | `StatusBadge` |
 | A person or organization | `Avatar` (+ `AvatarGroup`) | `IconBox` |
@@ -3172,6 +3179,43 @@ export function SeatUsage({ used, total, change }: { used: number; total: number
 }
 ```
 
+#### UsageBreakdown
+
+Exports: `UsageBreakdown`, types `UsageBreakdownProps`, `UsageBreakdownItem`. How a capacity is split
+between its parts: a header ("20% used", "197.6k / 1M"), a segmented bar, and one row per part with its
+color, name, amount and share of the total. For one percentage, use `UsageBar`.
+
+- `items` (required): `{ key, label, value, tone?, info? }`, the largest first. `tone` uses the
+  `LegendDot` vocabulary (default `chart-1` … `chart-5` in order, then `neutral`); give small "other"
+  parts `neutral`. `info` underlines the label with dots and explains it in a tooltip (needs
+  `TooltipProvider`).
+- `total` (required): the capacity, in the unit of the values. `label` (required): accessible name of
+  the bar ("Storage used").
+- `formatValue`: formats the amounts (default compact: `8.3k`, `197.6k`, `1M`).
+- `title`: left of the header (default "20% used"). `summary`: right of the header (default
+  "used / total"; `null` hides it). `hideList`: only the header and the bar.
+
+```tsx
+import { MetricCard, UsageBreakdown } from 'ferry-ui'
+
+export function StorageCard({ images, videos, other }: { images: number; videos: number; other: number }) {
+  return (
+    <MetricCard label="Storage">
+      <UsageBreakdown
+        label="Storage used"
+        total={50 * 1024 ** 3}
+        formatValue={(bytes) => `${(bytes / 1024 ** 3).toFixed(1)} GB`}
+        items={[
+          { key: 'images', label: 'Images', value: images },
+          { key: 'videos', label: 'Videos', value: videos },
+          { key: 'other', label: 'Other', value: other, tone: 'neutral', info: 'Documents, archives and backups.' },
+        ]}
+      />
+    </MetricCard>
+  )
+}
+```
+
 #### InfoTile
 
 Exports: `InfoTile`, type `InfoTileProps`. Overview tile: icon box, mono label, value, optional hint.
@@ -3665,6 +3709,121 @@ export function AppCommandMenu({ onNewInvoice }: { onNewInvoice: () => void }) {
 }
 ```
 
+### 7.7 Charts
+
+Import them from `ferry-ui/charts`, not from `ferry-ui`: they draw with `recharts`, an optional peer
+dependency the app installs itself (`npm install recharts`). Everything else (`MetricCard`, `LegendDot`)
+still comes from `ferry-ui`. Series colors are the chart tokens (`var(--chart-1)` to `var(--chart-5)`).
+
+#### TimeSeriesChart
+
+Exports: `TimeSeriesChart`, types `TimeSeriesChartProps`, `TimeSeriesSeries`. Line chart of values over
+time: round time axis in local time, value axis on round values of the unit, a tooltip with every series
+at the hovered time, breaks where nothing was measured, an empty text when there is no value.
+
+- `data` (required): rows `{ t, <series key>: value }`, sorted by time, `t` in milliseconds since the
+  epoch (`TimeSeriesRow`). A `null` value stops the line of its series.
+- `series` (required): `{ key, label, color? }`, the most important first. `key` is CSS-safe; `color`
+  defaults to `chartColor(index)`.
+- `unit`: `number` (default), `percent`, `bytes`, `bytes-per-second`, `per-second`, `milliseconds`: the
+  tooltip format, the axis format and the round steps of the axis. `TIME_SERIES_UNITS` lists them.
+- `stacked`: stacked areas (parts of a total) instead of lines.
+- `from`, `to`: the time axis (ms); default the first and last point.
+- `step`: time between two points (ms). With it, a run of more than `gapSteps` (default 2) missing steps
+  breaks the lines.
+- `max`: fixed top of the value axis (`100` for a percentage, a memory limit); the axis ticks its
+  quarters. Default: a round value above the highest point.
+- `formatValue`, `formatTick`, `formatTime`: replace the tooltip value, the axis tick and the tooltip
+  header (default `Oct 17, 14:05:30`).
+- `empty`: shown instead of the chart, at the same height, when no series has a value. Default "No data".
+- Height: `className` (default `h-44 w-full`). Name it with `aria-label`.
+
+```tsx
+import { MetricCard } from 'ferry-ui'
+import { ChartLegendList, TimeSeriesChart, chartColor, type TimeSeriesRow, type TimeSeriesSeries } from 'ferry-ui/charts'
+
+const SERIES: TimeSeriesSeries[] = [
+  { key: 'p50', label: 'p50' },
+  { key: 'p95', label: 'p95' },
+]
+
+export function LatencyCard({ rows, from, to }: { rows: TimeSeriesRow[]; from: number; to: number }) {
+  return (
+    <MetricCard
+      label="Latency"
+      info="p95: 95% of the requests were faster."
+      aside={<ChartLegendList items={SERIES.map((s, i) => ({ ...s, color: chartColor(i) }))} />}
+    >
+      <TimeSeriesChart
+        aria-label="Latency over time"
+        data={rows}
+        series={SERIES}
+        unit="milliseconds"
+        from={from}
+        to={to}
+        step={10_000}
+        empty="No request in this range"
+      />
+    </MetricCard>
+  )
+}
+```
+
+Its pure helpers are exported for charts and tables of your own: `formatChartValue(value, unit)`
+(`37.5%`, `1.5 GiB`, `—` when unknown), `formatChartTick(value, unit)`, `niceTicks(max, unit)`,
+`quarterTicks(max)`, `maxValue(rows, keys)`, `maxStacked(rows, keys)`, `hasValues(rows, keys)`,
+`timeTicks(from, to)`, `timeTickInterval(from, to)`, `formatTimeTick(t, interval)`,
+`formatPointTime(t)` and `withGaps(rows, keys, step, gapSteps)`; types `TimeSeriesRow`,
+`TimeSeriesUnit`.
+
+#### ChartContainer, ChartTooltip, ChartLegend, ChartLegendList
+
+Exports: `ChartContainer`, `ChartStyle`, `ChartTooltip`, `ChartTooltipContent`, `ChartLegend`,
+`ChartLegendContent`, `ChartLegendList`, `chartColor`, `useChart`, types `ChartConfig`,
+`ChartContainerProps`, `ChartStyleProps`, `ChartTooltipContentProps`, `ChartLegendContentProps`,
+`ChartLegendListProps`, `ChartLegendListItem`. The shadcn/ui chart parts, on the ferry-ui tokens: use
+them for every chart `TimeSeriesChart` does not cover.
+
+- `ChartContainer`: `config` (required, a `ChartConfig`: `{ [key]: { label, color } }` or `theme: { light,
+  dark }` instead of `color`), `children` (one recharts chart). Each color becomes `--color-<key>`: draw a
+  series with `fill="var(--color-<key>)"`. 16:9 by default; set a height with
+  `className="aspect-auto h-60 w-full"`. `initialDimension` (default 320 × 200) is the size drawn before
+  the container is measured. Name the chart with `aria-label`.
+- `ChartTooltip` and `ChartLegend` are recharts' `Tooltip` and `Legend`. Give them
+  `content={<ChartTooltipContent />}` and `content={<ChartLegendContent />}`.
+- `ChartTooltipContent`: `indicator` `dot` (default), `line`, `dashed`; `hideLabel`, `hideIndicator`,
+  `labelFormatter` (header), `formatter` (replaces a row), `nameKey`, `labelKey`.
+- `ChartLegendContent`: `hideIcon`, `nameKey`.
+- `ChartLegendList`: a legend outside a chart (a `MetricCard`'s `aside`, above several charts):
+  `items` `{ key, label, color }`; named "Legend" unless `aria-label` says otherwise.
+- `chartColor(index)`: `var(--chart-1)` … `var(--chart-5)`, then again from `var(--chart-1)`.
+- `ChartStyle` (the `--color-<key>` variables) and `useChart` (the `config` of the nearest container) are
+  for chart parts of your own.
+
+```tsx
+import { type ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from 'ferry-ui/charts'
+import { Bar, BarChart, CartesianGrid, XAxis } from 'recharts'
+
+const config = {
+  online: { label: 'Online', color: 'var(--chart-1)' },
+  store: { label: 'In store', color: 'var(--chart-4)' },
+} satisfies ChartConfig
+
+export function OrdersByMonth({ rows }: { rows: { month: string; online: number; store: number }[] }) {
+  return (
+    <ChartContainer config={config} aria-label="Orders per month" className="aspect-auto h-60 w-full">
+      <BarChart data={rows}>
+        <CartesianGrid vertical={false} />
+        <XAxis dataKey="month" tickLine={false} axisLine={false} tickMargin={8} />
+        <ChartTooltip content={<ChartTooltipContent />} />
+        <Bar dataKey="online" fill="var(--color-online)" radius={3} />
+        <Bar dataKey="store" fill="var(--color-store)" radius={3} />
+      </BarChart>
+    </ChartContainer>
+  )
+}
+```
+
 ## 8. Accessibility
 
 ferry-ui components ship the roles, focus management and keyboard behavior. The parts that depend on you:
@@ -3780,6 +3939,7 @@ Rules for changing this repository. They are the conventions of the existing cod
 ```text
 src/
   index.ts                     public barrel: `export *` for every public module
+  charts.ts                    `ferry-ui/charts` barrel: the modules of components/charts (they need recharts)
   styles/                      tokens.css (variables), theme.css (Tailwind mapping + utilities),
                                fonts.css, standalone.css (source of the precompiled styles.css)
   theme/                       ThemeProvider, themeInitScript
@@ -3788,6 +3948,7 @@ src/
   components/primitives/       shadcn-style building blocks on Radix UI
   components/patterns/         compositions of primitives for recurring product needs
   components/layout/           application-shell pieces
+  components/charts/           charts on recharts (optional peer dependency), exported by charts.ts only
   foundations/                 Storybook docs pages (not shipped)
   examples/                    full-screen example pages (`*-example.tsx`) and their stories (not shipped)
 ```
@@ -3824,11 +3985,13 @@ Primitives never import patterns or layout.
     `React.ComponentProps<typeof Checkbox>`).
 12. **Accessibility is part of the component**: roles, names, keyboard behavior, focus ring
     (`outline-none focus-visible:ring-2 focus-visible:ring-ring`), `aria-hidden` on decoration.
-13. **Export it** from `src/index.ts` (`export * from './components/patterns/timeline'`).
-    `src/index.test.ts` fails when a module is missing from the barrel.
+13. **Export it** from `src/index.ts` (`export * from './components/patterns/timeline'`), or from
+    `src/charts.ts` for a module of `components/charts`. `src/index.test.ts` fails when a module is
+    missing from its barrel, and when `src/index.ts` exports a chart.
 14. **Document it** in this file (catalog entry with props and a snippet). `npm run check:docs` fails
     when a public export is not mentioned here or when a snippet stops type-checking.
-15. Do not add a runtime dependency (or run `npm install`) without agreement.
+15. Do not add a runtime dependency (or run `npm install`) without agreement. `recharts` is an optional
+    peer dependency: only `components/charts` may import it.
 
 A component file that follows every rule, `src/components/patterns/timeline.tsx`:
 
@@ -3904,8 +4067,8 @@ Stories are the documentation and the test suite: `src/stories.test.tsx` renders
 its `play` function in jsdom.
 
 1. CSF3, co-located, typed with `satisfies Meta<typeof Component>`.
-2. `title`: `Primitives/<Name>`, `Patterns/<Name>`, `Layout/<Name>`, `Foundations/<Name>` or
-   `Examples/<Name>`.
+2. `title`: `Primitives/<Name>`, `Patterns/<Name>`, `Layout/<Name>`, `Charts/<Name>`,
+   `Foundations/<Name>` or `Examples/<Name>`.
 3. `parameters.docs.description.component`: usage guidance (what, when, when not).
 4. A `Default` story driven by `args` (so the Controls panel works), then one story per variant, size
    and state (loading, empty, error, disabled), then composition stories.

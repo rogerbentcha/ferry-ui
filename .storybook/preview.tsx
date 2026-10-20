@@ -31,7 +31,7 @@ const preview: Preview = {
     docs: { toc: true },
     options: {
       storySort: {
-        order: ['Introduction', 'Foundations', 'Primitives', 'Patterns', 'Layout', '*'],
+        order: ['Introduction', 'Foundations', 'Primitives', 'Patterns', 'Layout', 'Charts', '*'],
       },
     },
   },

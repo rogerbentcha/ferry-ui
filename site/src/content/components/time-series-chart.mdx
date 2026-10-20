@@ -1,0 +1,85 @@
+---
+title: Time Series Chart
+description: A line chart of values over time, with round axes, a tooltip and breaks where data is missing.
+group: Charts
+source: src/components/charts/time-series-chart.tsx
+---
+
+<Demo name="time-series-chart/hero" align="stretch" title="The CPU of a server over one hour" />
+
+## Usage guidelines
+
+- **Values over time.** Use it for a CPU, a memory, a rate of requests or a latency.
+- **Put it in a card.** Put the chart in the children of a [Metric Card](/docs/components/metric-card), in a grid of two columns.
+- **Categories are not time.** For bars by month or by product, use [Chart](/docs/components/chart).
+- **One current value is not a chart.** For a quota, use a `UsageBar` or a [Usage Breakdown](/docs/components/usage-breakdown).
+
+## Installation
+
+The charts use recharts. Install it in your app. Import the charts from `ferry-ui/charts`.
+
+```sh
+npm install recharts
+```
+
+## Anatomy
+
+```tsx title="Anatomy"
+import { TimeSeriesChart } from 'ferry-ui/charts'
+
+<TimeSeriesChart aria-label="" data={[]} series={[]} unit="number" />
+```
+
+Each row of `data` has a time `t` in milliseconds and one value for each series key. A `null` value stops the line.
+
+## Examples
+
+### Units
+
+`unit` sets the format of the tooltip, the format of the axis and the round steps of the axis.
+
+| Unit | Tooltip | Axis |
+| --- | --- | --- |
+| `number` (default) | `1,284` | `1,284` |
+| `percent` | `37.5%` | `25%` |
+| `bytes` | `1.5 GiB` | `1.5 GiB` |
+| `bytes-per-second` | `2.0 MiB/s` | `2 MiB/s` |
+| `per-second` | `12.5/s` | `0.5/s` |
+| `milliseconds` | `180 ms` | `250 ms` |
+
+`formatValue` and `formatTick` replace these formats. `max` sets a fixed top, such as 100 for a percentage.
+
+### Several series and a legend
+
+Give one entry of `series` for each line. Put a `ChartLegendList` in the `aside` of the card. `chartColor` gives the same colors as the chart.
+
+<Demo name="time-series-chart/legend" align="stretch" title="Two latency lines with a legend" />
+
+### Stacked areas
+
+`stacked` shows the parts of a total. Set a `color` on each series to give each part a meaning.
+
+<Demo name="time-series-chart/stacked" align="stretch" title="Requests by status class, stacked" />
+
+### Breaks
+
+Set `step` to the time between two points. If more than `gapSteps` steps have no point, the line stops. The default `gapSteps` is 2.
+
+<Demo name="time-series-chart/gap" align="stretch" title="A memory line with a break of 20 minutes" />
+
+### Empty
+
+If no series has a value, the chart shows `empty` at the same height.
+
+<Demo name="time-series-chart/empty" align="stretch" title="A chart with no data" />
+
+## Accessibility
+
+- Give each chart an `aria-label`, such as "CPU over time".
+- The tooltip needs a pointer. Show the important numbers as text near the chart too.
+
+## API reference
+
+`TimeSeriesChart` also accepts each attribute of the `<div>` element.
+
+<PropsTable of="TimeSeriesChart" />
