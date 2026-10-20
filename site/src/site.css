@@ -179,6 +179,8 @@
 @layer components {
   /* The shader fades the pixels out itself. This mask makes sure the far edge never shows. */
   .pixel-field {
+    /* How long the canvas of ferry-shaders takes to appear. */
+    --shader-fade: 1000ms;
     mask-image: linear-gradient(to bottom, #000 60%, transparent);
   }
   .pixel-field[data-from='bottom'] {
